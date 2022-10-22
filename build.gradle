@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+    // https://mvnrepository.com/artifact/net.java.dev.jna/jna
+    implementation 'net.java.dev.jna:jna:5.12.1'
+    // https://mvnrepository.com/artifact/net.java.dev.jna/jna-platform
+    implementation 'net.java.dev.jna:jna-platform:5.12.1'
+    // https://mvnrepository.com/artifact/net.sourceforge.tess4j/tess4j
+    implementation 'net.sourceforge.tess4j:tess4j:5.4.0'
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    implementation 'org.slf4j:slf4j-api:2.0.3'
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
+    testImplementation 'org.slf4j:slf4j-simple:2.0.3'
+    // https://mvnrepository.com/artifact/net.dv8tion/JDA
+    implementation 'net.dv8tion:JDA:5.0.0-alpha.21'
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+    implementation 'commons-io:commons-io:2.11.0'
+
+
+
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'kr.sprtms16.main.Main'
+
+    }
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
