@@ -2,7 +2,6 @@ package kr.sprtms16.main;
 
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
-import com.sun.jna.platform.unix.Resource;
 import com.sun.jna.platform.win32.*;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.RECT;
@@ -17,37 +16,52 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.sourceforge.tess4j.Tesseract;
-import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 
 public class Main {
     public static Robot robot = null;
 
     static Tesseract instance = new Tesseract();
-    static JDA jda = JDABuilder.createDefault("MTAzMzI3NDM0MTEwNzk3MDEzMA.G3-gzV.OYqfcUA_sKB0uDvBiRGDuLme-23bSxYE7SUak4")
+    static JDA jda = JDABuilder.createDefault("여기에 토큰")
             .setStatus(OnlineStatus.ONLINE)
             .setAutoReconnect(true)
             .enableIntents(GatewayIntent.MESSAGE_CONTENT)
             .build();
     //https://discord.com/api/oauth2/authorize?client_id=1033274341107970130&permissions=8&scope=bot
     static List<String> lastExpMessages = new ArrayList<>();
+    static TextChannel alertChannel = null;
 
     public static void main(String[] args) {
         double mx = 1000;
         double my = 1000;
+        jda.addEventListener(new ListenerAdapter(){
+            @Override
+            public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+                User user = event.getAuthor();
+                TextChannel channel = event.getChannel().asTextChannel();
+                Message message = event.getMessage();
+                if(user.isBot()) return;
+                if(message.getContentRaw().charAt(0) == '!'){
+                    String[] args = message.getContentRaw().substring(1).split(" ");
+                    if(args.length <= 0) return;
+                    if(args[0].equalsIgnoreCase("여기")){
+                        if(alertChannel != null)
+                            alertChannel.sendMessage("이곳의 알람은 해제됩니다.").queue();
+                        alertChannel = channel;
+                        channel.sendMessage("다음부터 이곳으로 경뿌 알람이 울립니다.").queue();
+                    }
+                }
+            }
+        });
 //        URL url = Main.class.getClassLoader().getResource("tessdata");
 
 //        Path path = new File("src"+File.separator+"main"+File.separator+"resources"+File.separator+"tessdata").toPath();
@@ -98,13 +112,18 @@ public class Main {
                             } else if(result.contains("경험치")){
                                 detectMessage = "경험치";
                                 isExpAlert = true;
+                            } else if(result.contains("연탐")){
+                                detectMessage = "연탐";
+                                isExpAlert = true;
+                            } else if(result.contains("쿰")){
+                                detectMessage = "쿰";
+                                isExpAlert = true;
                             }
-                            if(isExpAlert){
+                            if(isExpAlert && alertChannel!= null){
                                 lastExpMessages = Arrays.stream(result.split("\\n")).toList();
                                 String finalDetectMessage = detectMessage;
-                                jda.getTextChannels().forEach(textChannel -> {
-                                    textChannel.sendMessage("'"+finalDetectMessage +"'가 발견되었습니다.").addFiles(FileUpload.fromData(outputfile, "image.jpg")).queue();
-                                });
+                                alertChannel.sendMessage("`"+finalDetectMessage +"`이(가) 발견되었습니다.").addFiles(FileUpload.fromData(outputfile, "image.jpg")).queue();
+                                Thread.sleep(10000);
                             }
                         }
                     }
